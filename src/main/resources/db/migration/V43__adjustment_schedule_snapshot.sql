@@ -1,0 +1,2 @@
+ALTER TABLE teacher_adjustments ADD COLUMN subject varchar(100), ADD COLUMN class_name varchar(20), ADD COLUMN section_name varchar(10), ADD COLUMN day_of_week varchar(20), ADD COLUMN start_time time, ADD COLUMN end_time time;
+UPDATE teacher_adjustments a SET subject=w.subject,class_name=w.class_name,section_name=w.section_name,day_of_week=w.day_of_week,start_time=w.start_time,end_time=w.end_time FROM teacher_workloads w WHERE w.id=a.workload_id AND w.tenant_id=a.tenant_id;

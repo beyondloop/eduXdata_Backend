@@ -1,0 +1,58 @@
+server:
+  port: ${PORT:8080}
+  forward-headers-strategy: framework
+  error:
+    # Return the reason from ResponseStatusException so the UI can show a useful
+    # validation message instead of the generic HTTP error payload.
+    include-message: always
+spring:
+  application:
+    name: school-os-api
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/school_os}
+    username: ${DATABASE_USERNAME:postgres}
+    password: ${DATABASE_PASSWORD:postgres}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:15}
+      minimum-idle: 3
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc.time_zone: UTC
+        format_sql: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+  servlet:
+    multipart:
+      max-file-size: 15MB
+      max-request-size: 20MB
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  health:
+    redis:
+      enabled: ${REDIS_HEALTH_ENABLED:false}
+app:
+  cors-origins: ${CORS_ORIGINS:http://localhost:5173}
+  jwt-secret: ${JWT_SECRET:change-this-development-secret-to-a-32-byte-value}
+  jwt-expiration-minutes: ${JWT_EXPIRATION_MINUTES:480}
+  storage:
+    endpoint: ${STORAGE_ENDPOINT:http://localhost:9000}
+    bucket: ${STORAGE_BUCKET:school-private}
+    access-key: ${STORAGE_ACCESS_KEY:}
+    secret-key: ${STORAGE_SECRET_KEY:}

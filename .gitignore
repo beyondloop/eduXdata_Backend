@@ -1,0 +1,9 @@
+target/
+build/
+build-output/
+build-runtime/
+verify-output/
+.mvn-build/
+*.log
+.DS_Store
+*.local

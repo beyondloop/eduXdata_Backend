@@ -37,21 +37,21 @@ public class FinancialStructureController {
         if (jdbc.queryForObject("select count(*) from classes where tenant_id = ? and name = ? and active", Integer.class, tenant, request.className()) == 0)
             throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST, "Choose an active class from your school");
         jdbc.update("""
-            insert into student_fee_structures(tenant_id, class_name, academic_fee, library_fee, readmission_fee,
+            insert into student_fee_structures(tenant_id, class_name, admission_fee, academic_fee, library_fee, readmission_fee,
                 development_fee, examination_fee, game_fee, magazine_fee, banavihar_fee, medicine_fee,
                 annual_function_fee, puja_festival_fee, prantiya_nidhi_fee, sanskar_kendra_fee, late_fee, misc_fee, transport_fee, updated_at)
-            values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, now())
+            values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, now())
             on conflict (tenant_id, class_name) do update set
-                academic_fee = excluded.academic_fee, library_fee = excluded.library_fee, readmission_fee = excluded.readmission_fee,
+                admission_fee = excluded.admission_fee, academic_fee = excluded.academic_fee, library_fee = excluded.library_fee, readmission_fee = excluded.readmission_fee,
                 development_fee = excluded.development_fee, examination_fee = excluded.examination_fee, game_fee = excluded.game_fee,
                 magazine_fee = excluded.magazine_fee, banavihar_fee = excluded.banavihar_fee, medicine_fee = excluded.medicine_fee,
                 annual_function_fee = excluded.annual_function_fee, puja_festival_fee = excluded.puja_festival_fee,
                 prantiya_nidhi_fee = excluded.prantiya_nidhi_fee, sanskar_kendra_fee = excluded.sanskar_kendra_fee,
-                late_fee = excluded.late_fee, misc_fee = excluded.misc_fee, updated_at = now()
-            """, tenant, request.className(), request.academicFee(), request.libraryFee(), request.readmissionFee(),
+                late_fee = excluded.late_fee, misc_fee = excluded.misc_fee, transport_fee = excluded.transport_fee, updated_at = now()
+            """, tenant, request.className(), fee(request.admissionFee()), request.academicFee(), request.libraryFee(), request.readmissionFee(),
             fee(request.developmentFee()), fee(request.examinationFee()), fee(request.gameFee()), fee(request.magazineFee()),
             fee(request.banaviharFee()), fee(request.medicineFee()), fee(request.annualFunctionFee()), fee(request.pujaFestivalFee()),
-            fee(request.prantiyaNidhiFee()), fee(request.sanskarKendraFee()), fee(request.lateFee()), fee(request.miscFee()));
+            fee(request.prantiyaNidhiFee()), fee(request.sanskarKendraFee()), fee(request.lateFee()), fee(request.miscFee()), fee(request.transportFee()));
         jdbc.update("update invoices i set amount = case when i.fee_type = 'Tuition fee' then ? when i.fee_type = 'Library fee' then ? when i.fee_type = 'Re-admission fee' then ? else i.amount end from students s where i.student_id = s.id and i.tenant_id = ? and s.class_name = ? and i.status in ('PENDING', 'PARTIAL') and i.fee_type in ('Tuition fee', 'Library fee', 'Re-admission fee')", request.academicFee(), request.libraryFee(), request.readmissionFee(), tenant, request.className());
         return jdbc.queryForMap("select * from student_fee_structures where tenant_id = ? and class_name = ?", tenant, request.className());
     }
@@ -75,18 +75,18 @@ public class FinancialStructureController {
 
     private BigDecimal fee(BigDecimal amount) { return amount == null ? BigDecimal.ZERO : amount; }
 
-    public record FeeStructureRequest(@NotBlank String className, @NotNull @DecimalMin("0") BigDecimal academicFee,
+    public record FeeStructureRequest(@NotBlank String className, @DecimalMin("0") BigDecimal admissionFee, @NotNull @DecimalMin("0") BigDecimal academicFee,
             @NotNull @DecimalMin("0") BigDecimal libraryFee, @NotNull @DecimalMin("0") BigDecimal readmissionFee,
             @DecimalMin("0") BigDecimal developmentFee, @DecimalMin("0") BigDecimal examinationFee,
             @DecimalMin("0") BigDecimal gameFee, @DecimalMin("0") BigDecimal magazineFee,
             @DecimalMin("0") BigDecimal banaviharFee, @DecimalMin("0") BigDecimal medicineFee,
             @DecimalMin("0") BigDecimal annualFunctionFee, @DecimalMin("0") BigDecimal pujaFestivalFee,
             @DecimalMin("0") BigDecimal prantiyaNidhiFee, @DecimalMin("0") BigDecimal sanskarKendraFee,
-            @DecimalMin("0") BigDecimal lateFee, @DecimalMin("0") BigDecimal miscFee) {
+            @DecimalMin("0") BigDecimal lateFee, @DecimalMin("0") BigDecimal miscFee, @DecimalMin("0") BigDecimal transportFee) {
         public FeeStructureRequest(String className, BigDecimal academicFee, BigDecimal libraryFee, BigDecimal readmissionFee) {
-            this(className, academicFee, libraryFee, readmissionFee, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
+            this(className, BigDecimal.ZERO, academicFee, libraryFee, readmissionFee, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
                 BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
-                BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO);
+                BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO);
         }
     }
     public record SalaryStructureRequest(@NotNull UUID teacherId, @NotNull @DecimalMin("0") BigDecimal basicSalary, @NotNull @DecimalMin("0") BigDecimal allowances, @NotNull @DecimalMin("0") BigDecimal deductions) {}

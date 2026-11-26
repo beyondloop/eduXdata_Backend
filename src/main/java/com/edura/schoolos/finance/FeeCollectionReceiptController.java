@@ -29,7 +29,8 @@ import java.util.UUID;
 public class FeeCollectionReceiptController {
     private static final ZoneId SCHOOL_ZONE = ZoneId.of("Asia/Kolkata");
     private static final List<FeeCategory> CATEGORIES = List.of(
-        new FeeCategory("readmission_fee", "Admission / Readmission Fee"),
+        new FeeCategory("admission_fee", "Admission Fee"),
+        new FeeCategory("readmission_fee", "Readmission Fee"),
         new FeeCategory("academic_fee", "Tuition Fee"),
         new FeeCategory("development_fee", "Development Fee"),
         new FeeCategory("examination_fee", "Examination Fee"),
@@ -105,7 +106,7 @@ public class FeeCollectionReceiptController {
         requireAcademicYear(tenant, academicYear);
         List<Map<String, Object>> rows = jdbc.queryForList("""
             select s.id, s.display_name, s.admission_number, s.user_id, s.father_name, s.class_name, s.section_name, s.roll_number,
-                f.academic_fee, f.library_fee, f.readmission_fee, f.development_fee, f.examination_fee, f.game_fee,
+                f.admission_fee, f.academic_fee, f.library_fee, f.readmission_fee, f.development_fee, f.examination_fee, f.game_fee,
                 f.magazine_fee, f.banavihar_fee, f.medicine_fee, f.annual_function_fee, f.puja_festival_fee,
                 f.prantiya_nidhi_fee, f.sanskar_kendra_fee, f.late_fee, f.misc_fee
             from students s left join student_fee_structures f on f.tenant_id = s.tenant_id and f.class_name = s.class_name
@@ -137,7 +138,7 @@ public class FeeCollectionReceiptController {
         try {
             row = jdbc.queryForMap("""
                 select s.display_name, s.admission_number, s.user_id, s.father_name, s.class_name, s.section_name, s.roll_number,
-                    t.name as school_name, f.academic_fee, f.library_fee, f.readmission_fee, f.development_fee,
+                    t.name as school_name, f.admission_fee, f.academic_fee, f.library_fee, f.readmission_fee, f.development_fee,
                     f.examination_fee, f.game_fee, f.magazine_fee, f.banavihar_fee, f.medicine_fee,
                     f.annual_function_fee, f.puja_festival_fee, f.prantiya_nidhi_fee, f.sanskar_kendra_fee,
                     f.late_fee, f.misc_fee

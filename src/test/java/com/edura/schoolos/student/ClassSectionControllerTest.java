@@ -35,4 +35,13 @@ class ClassSectionControllerTest {
         var result = controller.createSection(new ClassSectionController.SectionRequest(classId, " A "));
         verify(jdbc).update(contains("insert into sections"), eq(result.get("id")), eq(tenant), eq(classId), eq("A"));
     }
+
+    @Test void emptyClassIsArchivedForItsTenant() {
+        UUID classId = UUID.randomUUID();
+        when(jdbc.queryForObject(contains("from classes where id = ? and tenant_id = ? and active"), eq(Boolean.class), eq(classId), eq(tenant))).thenReturn(true);
+        when(jdbc.queryForObject(contains("from sections"), eq(Boolean.class), eq(tenant), eq(classId))).thenReturn(false);
+        when(jdbc.queryForObject(contains("from students"), eq(Boolean.class), eq(tenant), eq(tenant), eq(classId), eq(classId), eq(tenant))).thenReturn(false);
+        controller.deleteClass(classId);
+        verify(jdbc).update(contains("update classes set active = false"), eq(classId), eq(tenant));
+    }
 }

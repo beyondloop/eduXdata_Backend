@@ -59,6 +59,20 @@ public class ClassSectionController {
         return Map.of("id", id, "name", name);
     }
 
+    @DeleteMapping("/classes/{classId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN')")
+    public void deleteClass(@PathVariable UUID classId) {
+        UUID tenant = TenantContext.require();
+        if (!Boolean.TRUE.equals(jdbc.queryForObject("select exists(select 1 from classes where id = ? and tenant_id = ? and active)", Boolean.class, classId, tenant)))
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Class not found");
+        if (Boolean.TRUE.equals(jdbc.queryForObject("select exists(select 1 from sections where tenant_id = ? and class_id = ? and active)", Boolean.class, tenant, classId)))
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Delete this class's sections before deleting the class");
+        if (Boolean.TRUE.equals(jdbc.queryForObject("select exists(select 1 from students where tenant_id = ? and active and (section_id in (select id from sections where tenant_id = ? and class_id = ?) or lower(trim(class_name)) = lower(trim((select name from classes where id = ? and tenant_id = ?)))))", Boolean.class, tenant, tenant, classId, classId, tenant)))
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "A class with registered students cannot be deleted");
+        jdbc.update("update classes set active = false where id = ? and tenant_id = ?", classId, tenant);
+    }
+
     @PostMapping("/sections")
     @ResponseStatus(HttpStatus.CREATED)
     public Map<String, Object> createSection(@Valid @RequestBody SectionRequest request) {
